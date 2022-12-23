@@ -6,14 +6,19 @@ import net.serenitybdd.junit5.SerenityTest;
 import net.serenitybdd.rest.Ensure;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvFileSource;
 import utilities.SpartanTestBase;
 import utilities.SpartanUtil;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static net.serenitybdd.rest.SerenityRest.given;
 import static net.serenitybdd.rest.SerenityRest.lastResponse;
 import static org.hamcrest.Matchers.*;
+
 
 
 @SerenityTest
@@ -88,6 +93,38 @@ public class SpartanEditorTest extends SpartanTestBase {
 
         // check location header ends with newly generated id
         Ensure.that("check location header ends with newly generated id", vRes -> vRes.header("Location", endsWith(id)));
+
+    }
+
+    @ParameterizedTest(name ="POST SPARTAN {index} name {0}")
+    @CsvFileSource(resources = "/SpartanPOST.csv",numLinesToSkip = 1)
+    public void POSTSpartan(String name,String gender, long phone){
+
+        System.out.println("name = " + name);
+        System.out.println("gender = " + gender);
+        System.out.println("phone = " + phone);
+
+        Map<String,Object> spartanMap= new HashMap<>();
+        spartanMap.put("name",name);
+        spartanMap.put("gender",gender);
+        spartanMap.put("phone",phone);
+
+        System.out.println("spartanMap = " + spartanMap);
+
+
+        given().auth().basic("admin","admin")
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(spartanMap)
+                .when().post("/spartans");
+
+        //status code is 201
+        Ensure.that("Status Code is 201",vRes->vRes.statusCode(201));
+        //content type is CONTENT TYPE JSON
+        Ensure.that("Content Type is JSON",vRes->vRes.contentType(ContentType.JSON));
+        // A Spartan is Born!
+        Ensure.that("A Spartan is Born!",vRes->vRes.body("success",is("A Spartan is Born!")));
+
 
     }
 
